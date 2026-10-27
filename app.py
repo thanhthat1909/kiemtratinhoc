@@ -63,8 +63,6 @@ st.markdown("""
     <script>
     document.addEventListener("visibilitychange", function() {
         if (document.hidden) {
-            // Gửi tín hiệu cảnh báo qua Streamlit query params hoặc log
-            const dataLayer = window.parent.document;
             console.warn("CẢNH BÁO: Học sinh rời khỏi cửa sổ làm bài!");
         }
     });
@@ -112,7 +110,6 @@ if role == "Học sinh làm bài":
                     # Xáo trộn câu hỏi và đáp án cho từng học sinh
                     shuffled_q = []
                     for q in QUESTIONS:
-                        # Sao chép câu hỏi để không ảnh hưởng dữ liệu gốc
                         q_copy = q.copy()
                         options = q_copy["options"].copy()
                         correct_answer = options[0]  # Giả định đáp án gốc ở index 0
@@ -174,7 +171,6 @@ if role == "Học sinh làm bài":
                 mins, secs = divmod(remaining_seconds, 60)
                 st.markdown(f"<div class='timer-box'>⏳ Thời gian còn lại: {mins:02d}:{secs:02d}</div>", unsafe_allow_html=True)
             with col3:
-                # Nút ghi nhận vi phạm thủ công hoặc tự động cảnh báo
                 if st.button("⚠️ Báo cáo lỗi vi phạm giả lập"):
                     st.session_state.violations += 1
                     st.rerun()
@@ -187,10 +183,13 @@ if role == "Học sinh làm bài":
                 student_answers = {}
                 for i, q in enumerate(st.session_state.shuffled_questions):
                     st.markdown(f"**Câu {i+1}:** {q['question']}")
+                    
+                    # QUAN TRỌNG: index=None giúp KHÔNG bị chọn sẵn phương án A mặc định
                     choice = st.radio(
                         f"Chọn đáp án câu {i+1}:",
                         options=range(len(q["options"])),
                         format_func=lambda x: q["options"][x],
+                        index=None,  # Không chọn mặc định bất kỳ phương án nào
                         key=f"q_{i}",
                         label_visibility="collapsed"
                     )
@@ -201,9 +200,16 @@ if role == "Học sinh làm bài":
 
                 if submitted_btn:
                     score = 0
+                    unanswered = 0
                     for i, q in enumerate(st.session_state.shuffled_questions):
-                        if student_answers.get(i) == q["correct_index"]:
+                        ans = student_answers.get(i)
+                        if ans is None:
+                            unanswered += 1
+                        elif ans == q["correct_index"]:
                             score += 1
+                    
+                    if unanswered > 0:
+                        st.warning(f"⚠️ Bạn còn {unanswered} câu chưa trả lời. Các câu chưa trả lời sẽ tính là 0 điểm.")
                     
                     st.session_state.score = score
                     st.session_state.submitted = True
@@ -263,13 +269,11 @@ elif role == "Giáo viên quản trị":
 
             col_a, col_b = st.columns(2)
             with col_a:
-                # Chức năng làm mới dữ liệu
                 if st.button("🔄 Làm mới dữ liệu bảng điểm"):
                     st.session_state.submissions = []
                     st.success("Đã làm mới dữ liệu thành công!")
                     st.rerun()
             with col_b:
-                # Chức năng cho học sinh thi lại (Xóa lịch sử của một học sinh cụ thể)
                 student_to_reset = st.selectbox(
                     "Chọn học sinh cho phép thi lại:",
                     options=[s["Học sinh"] + " (" + s["Mã số"] + ")" for s in st.session_state.submissions]

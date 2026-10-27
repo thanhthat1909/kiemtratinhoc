@@ -3,9 +3,8 @@
 QUIZ_TITLE = "Kiểm tra Môn Tin Học - Lớp 6 (Bài 1 đến Bài 4)"
 DURATION_MINUTES = 15  # Thời gian làm bài (phút)
 
-# Danh sách câu hỏi
-# question: Nội dung câu hỏi
-# options: Danh sách 4 đáp án (đáp án đúng luôn nằm ở vị trí đầu tiên index 0, code sẽ tự động xáo trộn)
+# Danh sách câu hỏi bám sát SGK Kết nối tri thức và cuộc sống
+# (Đáp án đúng luôn nằm ở vị trí đầu tiên index 0, code sẽ tự động xáo trộn)
 QUESTIONS = [
     {
         "id": 1,
